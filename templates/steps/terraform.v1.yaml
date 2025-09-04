@@ -1,0 +1,210 @@
+parameters:
+  - name: terraform.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: terraform.env
+    type: object
+    default: {}
+  - name: terraform.planFile
+    type: string
+    default: ""
+  - name: terraform.version
+    type: string
+    default: "latest"
+  - name: terraform.bashEnvValue
+    type: string
+    default: ""
+  - name: terraform.connectedServiceNameARM
+    type: string
+    default: "azure-resource-manager"
+  - name: terraform.addSpnToEnvironment
+    type: boolean
+    default: false
+  - name: terraform.useGlobalConfig
+    type: boolean
+    default: false
+  - name: terraform.failOnStandardError
+    type: boolean
+    default: false
+  - name: terraform.visibleAzLogin
+    type: boolean
+    default: false
+
+  - name: terraform.install.enabled
+    type: boolean
+    default: false
+  - name: terraform.install.displayName
+    type: string
+    default: "Install Terraform"
+
+  - name: terraform.init.enabled
+    type: boolean
+    default: false
+  - name: terraform.init.displayName
+    type: string
+    default: "Init Terraform"
+  - name: terraform.init.scriptVersion
+    type: string
+    default: "v1"
+  - name: terraform.init.scriptArguments
+    type: string
+    default: ""
+  - name: terraform.init.options
+    type: string
+    default: ""
+
+  - name: terraform.validate.enabled
+    type: boolean
+    default: false
+  - name: terraform.validate.displayName
+    type: string
+    default: "Validate Terraform files"
+  - name: terraform.validate.scriptVersion
+    type: string
+    default: "v1"
+  - name: terraform.validate.scriptArguments
+    type: string
+    default: ""
+  - name: terraform.validate.options
+    type: string
+    default: ""
+
+  - name: terraform.plan.enabled
+    type: boolean
+    default: false
+  - name: terraform.plan.displayName
+    type: string
+    default: "Build Terraform plan"
+  - name: terraform.plan.scriptVersion
+    type: string
+    default: "v1"
+  - name: terraform.plan.scriptArguments
+    type: string
+    default: ""
+  - name: terraform.plan.options
+    type: string
+    default: ""
+
+  - name: terraform.show.enabled
+    type: boolean
+    default: false
+  - name: terraform.show.displayName
+    type: string
+    default: "Show Terraform plan"
+  - name: terraform.show.scriptVersion
+    type: string
+    default: "v1"
+  - name: terraform.show.scriptArguments
+    type: string
+    default: ""
+  - name: terraform.show.options
+    type: string
+    default: ""
+
+  - name: terraform.apply.enabled
+    type: boolean
+    default: false
+  - name: terraform.apply.displayName
+    type: string
+    default: "Apply Terraform plan"
+  - name: terraform.apply.scriptVersion
+    type: string
+    default: "v1"
+  - name: terraform.apply.scriptArguments
+    type: string
+    default: ""
+  - name: terraform.apply.options
+    type: string
+    default: ""
+
+steps:
+  - task: TerraformInstaller@1
+    enabled: ${{ parameters['terraform.install.enabled'] }}
+    displayName: "${{ parameters['terraform.install.displayName'] }}"
+    inputs:
+      terraformVersion: "${{ parameters['terraform.version'] }}"
+
+  - task: AzureCLI@2
+    enabled: ${{ parameters['terraform.init.enabled'] }}
+    displayName: "${{ parameters['terraform.init.displayName'] }}"
+    env:
+      TERRAFORM_INIT_OPTIONS: "${{ parameters['terraform.init.options'] }}"
+      ${{ insert }}: ${{ parameters['terraform.env'] }}
+    inputs:
+      azureSubscription: "${{ parameters['terraform.connectedServiceNameARM'] }}"
+      scriptType: "bash"
+      scriptLocation: "scriptPath"
+      scriptPath: "./scripts/terraform_init.${{ parameters['terraform.init.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['terraform.init.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
+      addSpnToEnvironment: ${{ parameters['terraform.addSpnToEnvironment'] }}
+      useGlobalConfig: ${{ parameters['terraform.useGlobalConfig'] }}
+      failOnStandardError: ${{ parameters['terraform.failOnStandardError'] }}
+      visibleAzLogin: ${{ parameters['terraform.visibleAzLogin'] }}
+
+  - task: Bash@3
+    enabled: ${{ parameters['terraform.validate.enabled'] }}
+    displayName: "${{ parameters['terraform.validate.displayName'] }}"
+    env:
+      TERRAFORM_VALIDATE_OPTIONS: "${{ parameters['terraform.validate.options'] }}"
+      ${{ insert }}: ${{ parameters['terraform.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/terraform_validate.${{ parameters['terraform.validate.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['terraform.validate.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['terraform.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['terraform.failOnStandardError'] }}
+
+  - task: AzureCLI@2
+    enabled: ${{ parameters['terraform.plan.enabled'] }}
+    displayName: "${{ parameters['terraform.plan.displayName'] }}"
+    env:
+      TERRAFORM_PLAN_FILE: "${{ parameters['terraform.planFile'] }}"
+      TERRAFORM_PLAN_OPTIONS: "${{ parameters['terraform.plan.options'] }}"
+      ${{ insert }}: ${{ parameters['terraform.env'] }}
+    inputs:
+      azureSubscription: "${{ parameters['terraform.connectedServiceNameARM'] }}"
+      scriptType: "bash"
+      scriptLocation: "scriptPath"
+      scriptPath: "./scripts/terraform_plan.${{ parameters['terraform.plan.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['terraform.plan.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
+      addSpnToEnvironment: ${{ parameters['terraform.addSpnToEnvironment'] }}
+      useGlobalConfig: ${{ parameters['terraform.useGlobalConfig'] }}
+      failOnStandardError: ${{ parameters['terraform.failOnStandardError'] }}
+      visibleAzLogin: ${{ parameters['terraform.visibleAzLogin'] }}
+
+  - task: Bash@3
+    enabled: ${{ parameters['terraform.show.enabled'] }}
+    displayName: "${{ parameters['terraform.show.displayName'] }}"
+    env:
+      TERRAFORM_PLAN_FILE: "${{ parameters['terraform.planFile'] }}"
+      TERRAFORM_SHOW_OPTIONS: "${{ parameters['terraform.show.options'] }}"
+      ${{ insert }}: ${{ parameters['terraform.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/terraform_show.${{ parameters['terraform.show.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['terraform.show.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['terraform.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['terraform.failOnStandardError'] }}
+
+  - task: AzureCLI@2
+    enabled: ${{ parameters['terraform.apply.enabled'] }}
+    displayName: "${{ parameters['terraform.apply.displayName'] }}"
+    env:
+      TERRAFORM_PLAN_FILE: "${{ parameters['terraform.planFile'] }}"
+      TERRAFORM_APPLY_OPTIONS: "${{ parameters['terraform.apply.options'] }}"
+      ${{ insert }}: ${{ parameters['terraform.env'] }}
+    inputs:
+      azureSubscription: "${{ parameters['terraform.connectedServiceNameARM'] }}"
+      scriptType: "bash"
+      scriptLocation: "scriptPath"
+      scriptPath: "./scripts/terraform_apply.${{ parameters['terraform.apply.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['terraform.apply.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
+      addSpnToEnvironment: ${{ parameters['terraform.addSpnToEnvironment'] }}
+      useGlobalConfig: ${{ parameters['terraform.useGlobalConfig'] }}
+      failOnStandardError: ${{ parameters['terraform.failOnStandardError'] }}
+      visibleAzLogin: ${{ parameters['terraform.visibleAzLogin'] }}

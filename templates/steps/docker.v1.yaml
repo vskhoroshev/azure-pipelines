@@ -1,0 +1,339 @@
+parameters:
+  - name: docker.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: docker.registryServer
+    type: string
+    default: "$(AZURE_CONTAINER_REGISTRY_SERVER)"
+  - name: docker.registryName
+    type: string
+    default: "$(AZURE_CONTAINER_REGISTRY_NAME)"
+  - name: docker.repositoryName
+    type: string
+    default: "$(PROJECT_NAME)"
+  - name: docker.sourceTag
+    type: string
+    default: "$(PROJECT_VERSION)-build.$(Build.BuildId)"
+  - name: docker.tags
+    type: string
+    default: ""
+  - name: docker.labels
+    type: string
+    default: ""
+  - name: docker.platforms
+    type: string
+    default: "linux/amd64,linux/arm64"
+  - name: docker.env
+    type: object
+    default: {}
+  - name: docker.buildFile
+    type: string
+    default: "Dockerfile"
+  - name: docker.archiveFile
+    type: string
+    default: "$(PROJECT_NAME).$(Build.BuildId).tar"
+  - name: docker.version
+    type: string
+    default: "27.5.1"
+  - name: docker.releaseType
+    type: string
+    default: "stable"
+  - name: docker.bashEnvValue
+    type: string
+    default: ""
+  - name: docker.connectedServiceNameARM
+    type: string
+    default: "azure-resource-manager"
+  - name: docker.addSpnToEnvironment
+    type: boolean
+    default: false
+  - name: docker.useGlobalConfig
+    type: boolean
+    default: false
+  - name: docker.failOnStandardError
+    type: boolean
+    default: false
+  - name: docker.visibleAzLogin
+    type: boolean
+    default: false
+
+  - name: docker.login.options
+    type: string
+    default: ""
+
+  - name: docker.install.enabled
+    type: boolean
+    default: false
+  - name: docker.install.displayName
+    type: string
+    default: "Install Docker"
+
+  - name: docker.install.qemu.enabled
+    type: boolean
+    default: false
+  - name: docker.install.qemu.displayName
+    type: string
+    default: "Install Docker QEMU"
+  - name: docker.install.qemu.scriptVersion
+    type: string
+    default: "v1"
+  - name: docker.install.qemu.scriptArguments
+    type: string
+    default: ""
+
+  - name: docker.enable.containerd.enabled
+    type: boolean
+    default: false
+  - name: docker.enable.containerd.displayName
+    type: string
+    default: "Enable Docker containerd"
+  - name: docker.enable.containerd.scriptVersion
+    type: string
+    default: "v1"
+  - name: docker.enable.containerd.scriptArguments
+    type: string
+    default: ""
+
+  - name: docker.build.enabled
+    type: boolean
+    default: false
+  - name: docker.build.displayName
+    type: string
+    default: "Build Docker image"
+  - name: docker.build.scriptVersion
+    type: string
+    default: "v1"
+  - name: docker.build.scriptArguments
+    type: string
+    default: ""
+  - name: docker.build.options
+    type: string
+    default: ""
+
+  - name: docker.tag.enabled
+    type: boolean
+    default: false
+  - name: docker.tag.displayName
+    type: string
+    default: "Tag Docker image"
+  - name: docker.tag.scriptVersion
+    type: string
+    default: "v1"
+  - name: docker.tag.scriptArguments
+    type: string
+    default: ""
+  - name: docker.tag.options
+    type: string
+    default: ""
+
+  - name: docker.save.enabled
+    type: boolean
+    default: false
+  - name: docker.save.displayName
+    type: string
+    default: "Save Docker image"
+  - name: docker.save.scriptVersion
+    type: string
+    default: "v1"
+  - name: docker.save.scriptArguments
+    type: string
+    default: ""
+  - name: docker.save.options
+    type: string
+    default: ""
+
+  - name: docker.load.enabled
+    type: boolean
+    default: false
+  - name: docker.load.displayName
+    type: string
+    default: "Load Docker image"
+  - name: docker.load.scriptVersion
+    type: string
+    default: "v1"
+  - name: docker.load.scriptArguments
+    type: string
+    default: ""
+  - name: docker.load.options
+    type: string
+    default: ""
+
+  - name: docker.inspect.enabled
+    type: boolean
+    default: false
+  - name: docker.inspect.displayName
+    type: string
+    default: "Inspect Docker image"
+  - name: docker.inspect.scriptVersion
+    type: string
+    default: "v1"
+  - name: docker.inspect.scriptArguments
+    type: string
+    default: ""
+  - name: docker.inspect.options
+    type: string
+    default: ""
+
+  - name: docker.push.enabled
+    type: boolean
+    default: false
+  - name: docker.push.displayName
+    type: string
+    default: "Push Docker image"
+  - name: docker.push.scriptVersion
+    type: string
+    default: "v1"
+  - name: docker.push.scriptArguments
+    type: string
+    default: ""
+  - name: docker.push.options
+    type: string
+    default: ""
+
+steps:
+  - task: DockerInstaller@0
+    enabled: ${{ parameters['docker.install.enabled'] }}
+    displayName: "${{ parameters['docker.install.displayName'] }}"
+    inputs:
+      dockerVersion: "${{ parameters['docker.version'] }}"
+      releaseType: "${{ parameters['docker.releaseType'] }}"
+
+  - task: Bash@3
+    enabled: ${{ parameters['docker.install.qemu.enabled'] }}
+    displayName: "${{ parameters['docker.install.qemu.displayName'] }}"
+    env:
+      ${{ insert }}: ${{ parameters['docker.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/docker_install_qemu.${{ parameters['docker.install.qemu.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['docker.install.qemu.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['docker.failOnStandardError'] }}
+
+  - task: Bash@3
+    enabled: ${{ parameters['docker.enable.containerd.enabled'] }}
+    displayName: "${{ parameters['docker.enable.containerd.displayName'] }}"
+    env:
+      ${{ insert }}: ${{ parameters['docker.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/docker_enable_containerd.${{ parameters['docker.enable.containerd.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['docker.enable.containerd.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['docker.failOnStandardError'] }}
+
+  - task: Bash@3
+    enabled: ${{ parameters['docker.build.enabled'] }}
+    displayName: "${{ parameters['docker.build.displayName'] }}"
+    env:
+      DOCKER_REGISTRY_SERVER: "${{ parameters['docker.registryServer'] }}"
+      DOCKER_REPOSITORY_NAME: "${{ parameters['docker.repositoryName'] }}"
+      DOCKER_BUILD_FILE: "${{ parameters['docker.buildFile'] }}"
+      DOCKER_SOURCE_TAG: "${{ parameters['docker.sourceTag'] }}"
+      DOCKER_PLATFORMS: "${{ parameters['docker.platforms'] }}"
+      DOCKER_LABELS: "${{ parameters['docker.labels'] }}"
+      DOCKER_BUILD_OPTIONS: "${{ parameters['docker.build.options'] }}"
+      ${{ insert }}: ${{ parameters['docker.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/docker_build.${{ parameters['docker.build.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['docker.build.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['docker.failOnStandardError'] }}
+
+  - task: Bash@3
+    enabled: ${{ parameters['docker.tag.enabled'] }}
+    displayName: "${{ parameters['docker.tag.displayName'] }}"
+    env:
+      DOCKER_REGISTRY_SERVER: "${{ parameters['docker.registryServer'] }}"
+      DOCKER_REPOSITORY_NAME: "${{ parameters['docker.repositoryName'] }}"
+      DOCKER_SOURCE_TAG: "${{ parameters['docker.sourceTag'] }}"
+      DOCKER_TAGS: "${{ parameters['docker.tags'] }}"
+      DOCKER_TAG_OPTIONS: "${{ parameters['docker.tag.options'] }}"
+      ${{ insert }}: ${{ parameters['docker.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/docker_tag.${{ parameters['docker.tag.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['docker.tag.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['docker.failOnStandardError'] }}
+
+  - task: Bash@3
+    enabled: ${{ parameters['docker.save.enabled'] }}
+    displayName: "${{ parameters['docker.save.displayName'] }}"
+    env:
+      DOCKER_REGISTRY_SERVER: "${{ parameters['docker.registryServer'] }}"
+      DOCKER_REPOSITORY_NAME: "${{ parameters['docker.repositoryName'] }}"
+      DOCKER_SOURCE_TAG: "${{ parameters['docker.sourceTag'] }}"
+      DOCKER_ARCHIVE_FILE: "${{ parameters['docker.archiveFile'] }}"
+      DOCKER_TAGS: "${{ parameters['docker.tags'] }}"
+      DOCKER_SAVE_OPTIONS: "${{ parameters['docker.save.options'] }}"
+      ${{ insert }}: ${{ parameters['docker.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/docker_save.${{ parameters['docker.save.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['docker.save.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['docker.failOnStandardError'] }}
+
+  - task: Bash@3
+    enabled: ${{ parameters['docker.load.enabled'] }}
+    displayName: "${{ parameters['docker.load.displayName'] }}"
+    env:
+      DOCKER_ARCHIVE_FILE: "${{ parameters['docker.archiveFile'] }}"
+      DOCKER_LOAD_OPTIONS: "${{ parameters['docker.load.options'] }}"
+      ${{ insert }}: ${{ parameters['docker.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/docker_load.${{ parameters['docker.load.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['docker.load.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['docker.failOnStandardError'] }}
+
+  - task: Bash@3
+    enabled: ${{ parameters['docker.inspect.enabled'] }}
+    displayName: "${{ parameters['docker.inspect.displayName'] }}"
+    env:
+      DOCKER_REGISTRY_SERVER: "${{ parameters['docker.registryServer'] }}"
+      DOCKER_REPOSITORY_NAME: "${{ parameters['docker.repositoryName'] }}"
+      DOCKER_SOURCE_TAG: "${{ parameters['docker.sourceTag'] }}"
+      DOCKER_TAGS: "${{ parameters['docker.tags'] }}"
+      DOCKER_INSPECT_OPTIONS: "${{ parameters['docker.inspect.options'] }}"
+      ${{ insert }}: ${{ parameters['docker.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/docker_inspect.${{ parameters['docker.inspect.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['docker.inspect.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['docker.failOnStandardError'] }}
+
+  - task: AzureCLI@2
+    enabled: ${{ parameters['docker.push.enabled'] }}
+    displayName: "${{ parameters['docker.push.displayName'] }}"
+    env:
+      DOCKER_REGISTRY_SERVER: "${{ parameters['docker.registryServer'] }}"
+      DOCKER_REGISTRY_NAME: "${{ parameters['docker.registryName'] }}"
+      DOCKER_REPOSITORY_NAME: "${{ parameters['docker.repositoryName'] }}"
+      DOCKER_SOURCE_TAG: "${{ parameters['docker.sourceTag'] }}"
+      DOCKER_TAGS: "${{ parameters['docker.tags'] }}"
+      DOCKER_PUSH_OPTIONS: "${{ parameters['docker.push.options'] }}"
+      DOCKER_LOGIN_OPTIONS: "${{ parameters['docker.login.options'] }}"
+      ${{ insert }}: ${{ parameters['docker.env'] }}
+    inputs:
+      azureSubscription: "${{ parameters['docker.connectedServiceNameARM'] }}"
+      scriptType: "bash"
+      scriptLocation: "scriptPath"
+      scriptPath: "./scripts/docker_push.${{ parameters['docker.push.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['docker.push.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+      addSpnToEnvironment: ${{ parameters['docker.addSpnToEnvironment'] }}
+      useGlobalConfig: ${{ parameters['docker.useGlobalConfig'] }}
+      failOnStandardError: ${{ parameters['docker.failOnStandardError'] }}
+      visibleAzLogin: ${{ parameters['docker.visibleAzLogin'] }}

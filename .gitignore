@@ -1,0 +1,15 @@
+# IntelliJ IDEA
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+desktop.ini
+
+# Temporary files
+tmp/
+temp/

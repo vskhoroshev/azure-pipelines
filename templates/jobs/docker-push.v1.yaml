@@ -1,0 +1,72 @@
+parameters:
+  - name: pool.vmImage
+    type: string
+    default: "ubuntu-latest"
+  - name: job.name
+    type: string
+    default: "push_docker_image"
+  - name: job.displayName
+    type: string
+    default: "Push Docker image"
+  - name: job.dependsOn
+    type: string
+    default: ""
+  - name: job.artifactDirectory
+    type: string
+    default: "$(Build.StagingDirectory)/$(System.JobId)"
+  - name: job.artifactName
+    type: string
+    default: "$(Build.DefinitionName).$(Build.BuildNumber).docker-image"
+  - name: variable.templateVersion
+    type: string
+    default: "v1"
+  - name: variable.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: docker.templateVersion
+    type: string
+    default: "v1"
+  - name: docker.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: docker.tags
+    type: string
+    default: ""
+  - name: docker.push.options
+    type: string
+    default: ""
+
+jobs:
+  - job: "${{ parameters['job.name'] }}"
+    displayName: "${{ parameters['job.displayName'] }}"
+    dependsOn: "${{ parameters['job.dependsOn'] }}"
+    pool:
+      vmImage: "${{ parameters['pool.vmImage'] }}"
+    steps:
+      - checkout: self
+        lfs: true
+        persistCredentials: false
+
+      - template: "../steps/variable.${{ parameters['variable.templateVersion'] }}.yaml"
+        parameters:
+          variable.workingDirectory: "${{ parameters['variable.workingDirectory'] }}"
+          variable.load.enabled: true
+
+      - task: DownloadPipelineArtifact@2
+        displayName: "Download artifact"
+        inputs:
+          buildType: "current"
+          artifactName: "${{ parameters['job.artifactName'] }}"
+          targetPath: "${{ parameters['job.artifactDirectory'] }}"
+
+      - template: "../steps/docker.${{ parameters['docker.templateVersion'] }}.yaml"
+        parameters:
+          docker.workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+          docker.tags: "${{ parameters['docker.tags'] }}"
+          docker.archiveFile: "${{ parameters['job.artifactDirectory'] }}/$(PROJECT_NAME).$(Build.BuildId).tar"
+          docker.install.enabled: true
+          docker.enable.containerd.enabled: true
+          docker.load.enabled: true
+          docker.inspect.enabled: true
+          docker.push.enabled: true
+          docker.push.options: "${{ parameters['docker.push.options'] }}"

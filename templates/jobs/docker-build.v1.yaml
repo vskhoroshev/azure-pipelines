@@ -1,0 +1,89 @@
+parameters:
+  - name: pool.vmImage
+    type: string
+    default: "ubuntu-latest"
+  - name: job.name
+    type: string
+    default: "build_docker_image"
+  - name: job.displayName
+    type: string
+    default: "Build Docker image"
+  - name: job.dependsOn
+    type: string
+    default: ""
+  - name: job.artifactDirectory
+    type: string
+    default: "$(Build.StagingDirectory)/$(System.JobId)"
+  - name: job.artifactName
+    type: string
+    default: "$(Build.DefinitionName).$(Build.BuildNumber).docker-image"
+  - name: variable.templateVersion
+    type: string
+    default: "v1"
+  - name: variable.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: docker.templateVersion
+    type: string
+    default: "v1"
+  - name: docker.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: docker.tags
+    type: string
+    default: ""
+  - name: docker.labels
+    type: string
+    default: |
+      team.project.name='$(System.TeamProject)',
+      repository.name='$(Build.Repository.Name)',
+      source.version='$(Build.SourceVersion)',
+      project.name='$(PROJECT_NAME)',
+      project.version='$(PROJECT_VERSION)',
+      build.id='$(Build.BuildId)',
+      build.name='$(Build.DefinitionName)',
+      build.number='$(Build.BuildNumber)'
+  - name: docker.platforms
+    type: string
+    default: "linux/amd64,linux/arm64"
+  - name: docker.build.options
+    type: string
+    default: ""
+
+jobs:
+  - job: "${{ parameters['job.name'] }}"
+    displayName: "${{ parameters['job.displayName'] }}"
+    dependsOn: "${{ parameters['job.dependsOn'] }}"
+    pool:
+      vmImage: "${{ parameters['pool.vmImage'] }}"
+    steps:
+      - checkout: self
+        lfs: true
+        persistCredentials: false
+
+      - template: "../steps/variable.${{ parameters['variable.templateVersion'] }}.yaml"
+        parameters:
+          variable.workingDirectory: "${{ parameters['variable.workingDirectory'] }}"
+          variable.load.enabled: true
+
+      - template: "../steps/docker.${{ parameters['docker.templateVersion'] }}.yaml"
+        parameters:
+          docker.workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
+          docker.tags: "${{ parameters['docker.tags'] }}"
+          docker.labels: "${{ parameters['docker.labels'] }}"
+          docker.platforms: "${{ parameters['docker.platforms'] }}"
+          docker.archiveFile: "${{ parameters['job.artifactDirectory'] }}/$(PROJECT_NAME).$(Build.BuildId).tar"
+          docker.install.enabled: true
+          docker.install.qemu.enabled: true
+          docker.enable.containerd.enabled: true
+          docker.build.enabled: true
+          docker.build.options: "${{ parameters['docker.build.options'] }}"
+          docker.tag.enabled: true
+          docker.save.enabled: true
+
+      - task: PublishPipelineArtifact@1
+        displayName: "Publish artifact"
+        inputs:
+          targetPath: "${{ parameters['job.artifactDirectory'] }}"
+          artifact: "${{ parameters['job.artifactName'] }}"
+          publishLocation: "pipeline"

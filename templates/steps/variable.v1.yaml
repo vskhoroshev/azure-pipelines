@@ -1,0 +1,44 @@
+parameters:
+  - name: variable.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: variable.env
+    type: object
+    default: {}
+  - name: variable.files
+    type: string
+    default: ".env"
+  - name: variable.bashEnvValue
+    type: string
+    default: ""
+  - name: variable.failOnStandardError
+    type: boolean
+    default: false
+
+  - name: variable.load.enabled
+    type: boolean
+    default: false
+  - name: variable.load.displayName
+    type: string
+    default: "Load variables"
+  - name: variable.load.scriptVersion
+    type: string
+    default: "v1"
+  - name: variable.load.scriptArguments
+    type: string
+    default: ""
+
+steps:
+  - task: Bash@3
+    enabled: ${{ parameters['variable.load.enabled'] }}
+    displayName: "${{ parameters['variable.load.displayName'] }}"
+    env:
+      VARIABLE_FILES: "${{ parameters['variable.files'] }}"
+      ${{ insert }}: ${{ parameters['variable.env'] }}
+    inputs:
+      targetType: "filePath"
+      filePath: "./scripts/variable_load.${{ parameters['variable.load.scriptVersion'] }}.sh"
+      arguments: "${{ parameters['variable.load.scriptArguments'] }}"
+      workingDirectory: "${{ parameters['variable.workingDirectory'] }}"
+      bashEnvValue: "${{ parameters['variable.bashEnvValue'] }}"
+      failOnStderr: ${{ parameters['variable.failOnStandardError'] }}

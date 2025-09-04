@@ -1,0 +1,67 @@
+parameters:
+  - name: pool.vmImage
+    type: string
+    default: "ubuntu-latest"
+  - name: job.name
+    type: string
+    default: "apply_terraform_plan"
+  - name: job.displayName
+    type: string
+    default: "Apply Terraform plan"
+  - name: job.dependsOn
+    type: string
+    default: ""
+  - name: job.artifactDirectory
+    type: string
+    default: "$(Build.StagingDirectory)/$(System.JobId)"
+  - name: job.artifactName
+    type: string
+    default: "$(Build.DefinitionName).$(Build.BuildNumber).terraform-plan"
+  - name: variable.templateVersion
+    type: string
+    default: "v1"
+  - name: variable.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: terraform.templateVersion
+    type: string
+    default: "v1"
+  - name: terraform.workingDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)"
+  - name: terraform.apply.options
+    type: string
+    default: ""
+
+jobs:
+  - job: "${{ parameters['job.name'] }}"
+    displayName: "${{ parameters['job.displayName'] }}"
+    dependsOn: "${{ parameters['job.dependsOn'] }}"
+    pool:
+      vmImage: "${{ parameters['pool.vmImage'] }}"
+    steps:
+      - checkout: self
+        lfs: true
+        persistCredentials: false
+
+      - template: "../steps/variable.${{ parameters['variable.templateVersion'] }}.yaml"
+        parameters:
+          variable.workingDirectory: "${{ parameters['variable.workingDirectory'] }}"
+          variable.load.enabled: true
+
+      - task: DownloadPipelineArtifact@2
+        displayName: "Download artifact"
+        inputs:
+          buildType: "current"
+          artifactName: "${{ parameters['job.artifactName'] }}"
+          targetPath: "${{ parameters['job.artifactDirectory'] }}"
+
+      - template: "../steps/terraform.${{ parameters['terraform.templateVersion'] }}.yaml"
+        parameters:
+          terraform.workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
+          terraform.planFile: "${{ parameters['job.artifactDirectory'] }}/$(PROJECT_NAME).$(Build.BuildId).tfplan"
+          terraform.install.enabled: true
+          terraform.init.enabled: true
+          terraform.show.enabled: true
+          terraform.apply.enabled: true
+          terraform.apply.options: "${{ parameters['terraform.apply.options'] }}"
