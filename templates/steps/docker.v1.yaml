@@ -1,7 +1,10 @@
 parameters:
+  - name: docker.templateDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)/azure-pipelines"
   - name: docker.workingDirectory
     type: string
-    default: "$(Build.SourcesDirectory)"
+    default: "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
   - name: docker.registryServer
     type: string
     default: "$(AZURE_CONTAINER_REGISTRY_SERVER)"
@@ -205,7 +208,7 @@ steps:
       ${{ insert }}: ${{ parameters['docker.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/docker_install_qemu.${{ parameters['docker.install.qemu.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['docker.templateDirectory'] }}/scripts/docker_install_qemu.${{ parameters['docker.install.qemu.scriptVersion'] }}.sh"
       arguments: "${{ parameters['docker.install.qemu.scriptArguments'] }}"
       workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
@@ -218,7 +221,7 @@ steps:
       ${{ insert }}: ${{ parameters['docker.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/docker_enable_containerd.${{ parameters['docker.enable.containerd.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['docker.templateDirectory'] }}/scripts/docker_enable_containerd.${{ parameters['docker.enable.containerd.scriptVersion'] }}.sh"
       arguments: "${{ parameters['docker.enable.containerd.scriptArguments'] }}"
       workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
@@ -238,7 +241,7 @@ steps:
       ${{ insert }}: ${{ parameters['docker.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/docker_build.${{ parameters['docker.build.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['docker.templateDirectory'] }}/scripts/docker_build.${{ parameters['docker.build.scriptVersion'] }}.sh"
       arguments: "${{ parameters['docker.build.scriptArguments'] }}"
       workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
@@ -256,7 +259,7 @@ steps:
       ${{ insert }}: ${{ parameters['docker.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/docker_tag.${{ parameters['docker.tag.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['docker.templateDirectory'] }}/scripts/docker_tag.${{ parameters['docker.tag.scriptVersion'] }}.sh"
       arguments: "${{ parameters['docker.tag.scriptArguments'] }}"
       workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
@@ -275,7 +278,7 @@ steps:
       ${{ insert }}: ${{ parameters['docker.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/docker_save.${{ parameters['docker.save.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['docker.templateDirectory'] }}/scripts/docker_save.${{ parameters['docker.save.scriptVersion'] }}.sh"
       arguments: "${{ parameters['docker.save.scriptArguments'] }}"
       workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
@@ -290,7 +293,7 @@ steps:
       ${{ insert }}: ${{ parameters['docker.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/docker_load.${{ parameters['docker.load.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['docker.templateDirectory'] }}/scripts/docker_load.${{ parameters['docker.load.scriptVersion'] }}.sh"
       arguments: "${{ parameters['docker.load.scriptArguments'] }}"
       workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
@@ -308,7 +311,7 @@ steps:
       ${{ insert }}: ${{ parameters['docker.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/docker_inspect.${{ parameters['docker.inspect.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['docker.templateDirectory'] }}/scripts/docker_inspect.${{ parameters['docker.inspect.scriptVersion'] }}.sh"
       arguments: "${{ parameters['docker.inspect.scriptArguments'] }}"
       workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['docker.bashEnvValue'] }}"
@@ -330,7 +333,7 @@ steps:
       azureSubscription: "${{ parameters['docker.connectedServiceNameARM'] }}"
       scriptType: "bash"
       scriptLocation: "scriptPath"
-      scriptPath: "./scripts/docker_push.${{ parameters['docker.push.scriptVersion'] }}.sh"
+      scriptPath: "${{ parameters['docker.templateDirectory'] }}/scripts/docker_push.${{ parameters['docker.push.scriptVersion'] }}.sh"
       arguments: "${{ parameters['docker.push.scriptArguments'] }}"
       workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
       addSpnToEnvironment: ${{ parameters['docker.addSpnToEnvironment'] }}
