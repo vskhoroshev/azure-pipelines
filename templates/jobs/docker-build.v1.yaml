@@ -17,18 +17,26 @@ parameters:
   - name: job.artifactName
     type: string
     default: "$(Build.DefinitionName).$(Build.BuildNumber).docker-image"
+  - name: job.templateDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)/azure-pipelines"
+  - name: job.firstSteps
+    type: stepList
+    default:
+      - checkout: self
+      - checkout: azure-pipelines
   - name: variable.templateVersion
     type: string
     default: "v1"
   - name: variable.workingDirectory
     type: string
-    default: "$(Build.SourcesDirectory)"
+    default: "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
   - name: docker.templateVersion
     type: string
     default: "v1"
   - name: docker.workingDirectory
     type: string
-    default: "$(Build.SourcesDirectory)"
+    default: "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
   - name: docker.tags
     type: string
     default: ""
@@ -57,17 +65,18 @@ jobs:
     pool:
       vmImage: "${{ parameters['pool.vmImage'] }}"
     steps:
-      - checkout: self
-        lfs: true
-        persistCredentials: false
+      - ${{ each step in parameters['job.firstSteps'] }}:
+          - ${{ step }}
 
       - template: "../steps/variable.${{ parameters['variable.templateVersion'] }}.yaml"
         parameters:
+          variable.templateDirectory: "${{ parameters['job.templateDirectory'] }}"
           variable.workingDirectory: "${{ parameters['variable.workingDirectory'] }}"
           variable.load.enabled: true
 
       - template: "../steps/docker.${{ parameters['docker.templateVersion'] }}.yaml"
         parameters:
+          docker.templateDirectory: "${{ parameters['job.templateDirectory'] }}"
           docker.workingDirectory: "${{ parameters['docker.workingDirectory'] }}"
           docker.tags: "${{ parameters['docker.tags'] }}"
           docker.labels: "${{ parameters['docker.labels'] }}"
