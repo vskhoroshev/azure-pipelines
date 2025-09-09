@@ -1,7 +1,10 @@
 parameters:
+  - name: variable.templateDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)/azure-pipelines"
   - name: variable.workingDirectory
     type: string
-    default: "$(Build.SourcesDirectory)"
+    default: "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
   - name: variable.env
     type: object
     default: {}
@@ -37,7 +40,7 @@ steps:
       ${{ insert }}: ${{ parameters['variable.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "$(Build.SourcesDirectory)/_vskhoroshev/azure-pipelines/scripts/variable_load.${{ parameters['variable.load.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['variable.templateDirectory'] }}/scripts/variable_load.${{ parameters['variable.load.scriptVersion'] }}.sh"
       arguments: "${{ parameters['variable.load.scriptArguments'] }}"
       workingDirectory: "${{ parameters['variable.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['variable.bashEnvValue'] }}"
