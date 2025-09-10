@@ -25,4 +25,4 @@ docker::command buildx build \
   -t "${DOCKER_REGISTRY_SERVER}/${DOCKER_REPOSITORY_NAME}:${DOCKER_SOURCE_TAG}" \
   --platform "${DOCKER_PLATFORMS}" \
   "${docker_labels[@]:+${docker_labels[@]}}" \
-  "${DOCKER_BUILD_OPTIONS:-} ."
+  "${DOCKER_BUILD_OPTIONS:-} '${DOCKER_BUILD_CONTEXT:-.}'"
