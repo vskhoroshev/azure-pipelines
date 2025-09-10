@@ -29,6 +29,9 @@ parameters:
   - name: docker.env
     type: object
     default: {}
+  - name: docker.buildContext
+    type: string
+    default: "."
   - name: docker.buildFile
     type: string
     default: "Dockerfile"
@@ -233,6 +236,7 @@ steps:
     env:
       DOCKER_REGISTRY_SERVER: "${{ parameters['docker.registryServer'] }}"
       DOCKER_REPOSITORY_NAME: "${{ parameters['docker.repositoryName'] }}"
+      DOCKER_BUILD_CONTEXT: "${{ parameters['docker.buildContext'] }}"
       DOCKER_BUILD_FILE: "${{ parameters['docker.buildFile'] }}"
       DOCKER_SOURCE_TAG: "${{ parameters['docker.sourceTag'] }}"
       DOCKER_PLATFORMS: "${{ parameters['docker.platforms'] }}"
