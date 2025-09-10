@@ -96,3 +96,4 @@ jobs:
           targetPath: "${{ parameters['job.artifactDirectory'] }}"
           artifact: "${{ parameters['job.artifactName'] }}"
           publishLocation: "pipeline"
+
