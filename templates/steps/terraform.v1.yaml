@@ -1,7 +1,10 @@
 parameters:
+  - name: terraform.templateDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)/azure-pipelines"
   - name: terraform.workingDirectory
     type: string
-    default: "$(Build.SourcesDirectory)"
+    default: "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
   - name: terraform.env
     type: object
     default: {}
@@ -134,7 +137,7 @@ steps:
       azureSubscription: "${{ parameters['terraform.connectedServiceNameARM'] }}"
       scriptType: "bash"
       scriptLocation: "scriptPath"
-      scriptPath: "./scripts/terraform_init.${{ parameters['terraform.init.scriptVersion'] }}.sh"
+      scriptPath: "${{ parameters['terraform.templateDirectory'] }}/scripts/terraform_init.${{ parameters['terraform.init.scriptVersion'] }}.sh"
       arguments: "${{ parameters['terraform.init.scriptArguments'] }}"
       workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
       addSpnToEnvironment: ${{ parameters['terraform.addSpnToEnvironment'] }}
@@ -150,7 +153,7 @@ steps:
       ${{ insert }}: ${{ parameters['terraform.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/terraform_validate.${{ parameters['terraform.validate.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['terraform.templateDirectory'] }}/scripts/terraform_validate.${{ parameters['terraform.validate.scriptVersion'] }}.sh"
       arguments: "${{ parameters['terraform.validate.scriptArguments'] }}"
       workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['terraform.bashEnvValue'] }}"
@@ -167,7 +170,7 @@ steps:
       azureSubscription: "${{ parameters['terraform.connectedServiceNameARM'] }}"
       scriptType: "bash"
       scriptLocation: "scriptPath"
-      scriptPath: "./scripts/terraform_plan.${{ parameters['terraform.plan.scriptVersion'] }}.sh"
+      scriptPath: "${{ parameters['terraform.templateDirectory'] }}/scripts/terraform_plan.${{ parameters['terraform.plan.scriptVersion'] }}.sh"
       arguments: "${{ parameters['terraform.plan.scriptArguments'] }}"
       workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
       addSpnToEnvironment: ${{ parameters['terraform.addSpnToEnvironment'] }}
@@ -184,7 +187,7 @@ steps:
       ${{ insert }}: ${{ parameters['terraform.env'] }}
     inputs:
       targetType: "filePath"
-      filePath: "./scripts/terraform_show.${{ parameters['terraform.show.scriptVersion'] }}.sh"
+      filePath: "${{ parameters['terraform.templateDirectory'] }}/scripts/terraform_show.${{ parameters['terraform.show.scriptVersion'] }}.sh"
       arguments: "${{ parameters['terraform.show.scriptArguments'] }}"
       workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
       bashEnvValue: "${{ parameters['terraform.bashEnvValue'] }}"
@@ -201,7 +204,7 @@ steps:
       azureSubscription: "${{ parameters['terraform.connectedServiceNameARM'] }}"
       scriptType: "bash"
       scriptLocation: "scriptPath"
-      scriptPath: "./scripts/terraform_apply.${{ parameters['terraform.apply.scriptVersion'] }}.sh"
+      scriptPath: "${{ parameters['terraform.templateDirectory'] }}/scripts/terraform_apply.${{ parameters['terraform.apply.scriptVersion'] }}.sh"
       arguments: "${{ parameters['terraform.apply.scriptArguments'] }}"
       workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
       addSpnToEnvironment: ${{ parameters['terraform.addSpnToEnvironment'] }}
