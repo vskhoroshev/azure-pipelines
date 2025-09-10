@@ -17,18 +17,26 @@ parameters:
   - name: job.artifactName
     type: string
     default: "$(Build.DefinitionName).$(Build.BuildNumber).terraform-plan"
+  - name: job.templateDirectory
+    type: string
+    default: "$(Build.SourcesDirectory)/azure-pipelines"
+  - name: job.firstSteps
+    type: stepList
+    default:
+      - checkout: self
+      - checkout: azure-pipelines
   - name: variable.templateVersion
     type: string
     default: "v1"
   - name: variable.workingDirectory
     type: string
-    default: "$(Build.SourcesDirectory)"
+    default: "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
   - name: terraform.templateVersion
     type: string
     default: "v1"
   - name: terraform.workingDirectory
     type: string
-    default: "$(Build.SourcesDirectory)"
+    default: "$(Build.SourcesDirectory)/$(Build.Repository.Name)"
   - name: terraform.plan.options
     type: string
     default: ""
@@ -40,17 +48,18 @@ jobs:
     pool:
       vmImage: "${{ parameters['pool.vmImage'] }}"
     steps:
-      - checkout: self
-        lfs: true
-        persistCredentials: false
+      - ${{ each step in parameters['job.firstSteps'] }}:
+          - ${{ step }}
 
       - template: "../steps/variable.${{ parameters['variable.templateVersion'] }}.yaml"
         parameters:
+          variable.templateDirectory: "${{ parameters['job.templateDirectory'] }}"
           variable.workingDirectory: "${{ parameters['variable.workingDirectory'] }}"
           variable.load.enabled: true
 
       - template: "../steps/terraform.${{ parameters['terraform.templateVersion'] }}.yaml"
         parameters:
+          terraform.templateDirectory: "${{ parameters['job.templateDirectory'] }}"
           terraform.workingDirectory: "${{ parameters['terraform.workingDirectory'] }}"
           terraform.planFile: "${{ parameters['job.artifactDirectory'] }}/$(PROJECT_NAME).$(Build.BuildId).tfplan"
           terraform.install.enabled: true
@@ -64,3 +73,4 @@ jobs:
           targetPath: "${{ parameters['job.artifactDirectory'] }}"
           artifact: "${{ parameters['job.artifactName'] }}"
           publishLocation: "pipeline"
+
