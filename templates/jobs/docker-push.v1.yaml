@@ -79,3 +79,4 @@ jobs:
           docker.inspect.enabled: true
           docker.push.enabled: true
           docker.push.options: "${{ parameters['docker.push.options'] }}"
+
